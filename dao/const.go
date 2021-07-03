@@ -4,3 +4,4 @@ const (
 	INFO = "info"
 	ERROR = "error"
 )
+

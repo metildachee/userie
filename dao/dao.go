@@ -15,6 +15,8 @@ import (
 type Dao struct {
 	cli     *elasticv7.Client
 	cluster string
+	SafeCounter
+	ctx context.Context
 }
 
 func NewDao() (*Dao, error) {
@@ -26,6 +28,7 @@ func NewDao() (*Dao, error) {
 	dao := &Dao{}
 	dao.cli = es
 	dao.cluster = "usersg0"
+	dao.ctx = context.Background()
 	logger.Print(fmt.Sprintf("init es client successfull"), INFO)
 	return dao, nil
 }
@@ -55,13 +58,15 @@ func (dao *Dao) GetUsers() (users []model.User, err error) {
 }
 
 func (dao *Dao) GetUser(id string) (user model.User, err error) {
-	ctx := context.Background()
 	logger.Print("getting user", INFO)
 	if !dao.CheckInit() {
 		return user, errors.New("es client not init")
 	}
 	query := elasticv7.NewMatchQuery("_id", id)
-	searchResult, err := dao.cli.Search().Index(dao.cluster).Query(query).Do(ctx)
+	searchResult, err := dao.cli.Search().
+		Index(dao.cluster).
+		Query(query).
+		Do(dao.ctx)
 	if err != nil {
 		logger.Print(fmt.Sprintf("search err=%s", err), ERROR)
 		return
@@ -73,7 +78,7 @@ func (dao *Dao) GetUser(id string) (user model.User, err error) {
 			return
 		}
 	}
-	return
+	return user, errors.New("nil hit")
 }
 
 func (dao *Dao) CreateUser(new model.User) (err error) {
@@ -82,12 +87,13 @@ func (dao *Dao) CreateUser(new model.User) (err error) {
 	}
 
 	ctx := context.Background()
+	new.ID = dao.GetCount()
 	doc, err := json.Marshal(new)
 	if err != nil {
 		return err
 	}
 	fmt.Println(string(doc))
-	put1, err := dao.cli.Index().Index(dao.cluster).Id("").BodyJson(string(doc)).Do(ctx)
+	put1, err := dao.cli.Index().Index(dao.cluster).Id(new.ID).BodyJson(string(doc)).Do(ctx)
 	if err != nil {
 		fmt.Println("err", err)
 		return
@@ -102,12 +108,40 @@ func (dao *Dao) CreateUser(new model.User) (err error) {
 	return
 }
 
-func (dao *Dao) UpdateUser(id int32, new model.User) (err error) {
-	// todo: upsert into es
+func (dao *Dao) UpdateUser(updated model.User) (err error) {
+	if !dao.CheckInit() {
+		return errors.New("es client not init")
+	}
+
+	doc, err := json.Marshal(updated)
+	if err != nil {
+		logger.Print(fmt.Sprintf("err when marshalling json %s", err), ERROR)
+		return
+	}
+	update, err := dao.cli.Index().
+		Index(dao.cluster).
+		Id(updated.ID).
+		BodyJson(string(doc)).
+		Do(dao.ctx)
+	if err != nil {
+		logger.Print(fmt.Sprintf("es error %s", err), ERROR)
+		return
+	}
+	logger.Print(fmt.Sprintf("New version of user %q is now %d", update.Id, update.Version), INFO)
 	return
 }
 
-func (dao *Dao) DeleteUser(id int32) (err error) {
-	// todo: remove from es
+func (dao *Dao) DeleteUser(id string) (err error) {
+	if !dao.CheckInit() {
+		return errors.New("es client not init")
+	}
+	_, err = dao.cli.Delete().
+		Index(dao.cluster).
+		Id(id).Refresh("true").
+		Do(dao.ctx)
+	if err != nil {
+		return
+	}
+	logger.Print("deleted successfully", INFO)
 	return
 }
