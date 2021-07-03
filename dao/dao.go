@@ -7,9 +7,8 @@ import (
 	"github.com/metildachee/userie/model"
 )
 
-func GetUsers() []model.User {
+func GetUsers() (users []model.User, err error) {
 	// todo: access es and get all information of users
-	users := make([]model.User, 0)
 
 	for i := 0; i < 10; i++ {
 		user := model.User{
@@ -22,6 +21,24 @@ func GetUsers() []model.User {
 		}
 		users = append(users, user)
 	}
+	return
+}
 
-	return users
+func GetUser(userId int32) (user model.User, err error) {
+	// todo: access es and get all information of users
+	return
+}
+
+func CreateUser(new model.User) (err error) {
+	return
+	// todo: upsert into es and
+}
+
+func UpdateUser(id int32, new model.User) (err error) {
+	// todo: upsert into es
+	return
+}
+
+func DeleteUser(id int32) (err error) {
+	return
 }
