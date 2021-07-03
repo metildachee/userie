@@ -26,7 +26,14 @@ func GetUsers() (users []model.User, err error) {
 
 func GetUser(userId int32) (user model.User, err error) {
 	// todo: access es and get all information of users
-	return
+	return model.User{
+		ID:          1,
+		Name:        "metchee",
+		DOB:         1625276913,
+		Address:     "Kent Ridge",
+		Description: "default user description",
+		Ctime:       1625276913,
+	}, nil
 }
 
 func CreateUser(new model.User) (err error) {

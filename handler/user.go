@@ -16,7 +16,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	users, err := dao.GetUsers()
 	if err != nil {
-		// todo: return err code in response
 		log.Print(fmt.Sprintf("get users from dao err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -32,6 +31,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	if params["id"] == "" {
+		log.Print(fmt.Sprintf("missing params of id, params=%s", params), ERROR)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
