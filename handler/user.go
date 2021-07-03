@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/metildachee/userie/dao"
-	"github.com/metildachee/userie/log"
+	"github.com/metildachee/userie/logger"
 	"github.com/metildachee/userie/model"
 )
 
@@ -16,11 +16,11 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	users, err := dao.GetUsers()
 	if err != nil {
-		log.Print(fmt.Sprintf("get users from dao err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("get users from dao err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	if err := json.NewEncoder(w).Encode(users); err != nil {
-		log.Print(fmt.Sprintf("get users json encoder err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("get users json encoder err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
@@ -31,7 +31,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	if params["id"] == "" {
-		log.Print(fmt.Sprintf("missing params of id, params=%s", params), ERROR)
+		logger.Print(fmt.Sprintf("missing params of id, params=%s", params), ERROR)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -45,7 +45,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	if err := json.NewEncoder(w).Encode(user); err != nil {
-		log.Print(fmt.Sprintf("get user json encoder err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("get user json encoder err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
@@ -55,16 +55,16 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	newUser := model.User{}
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-		log.Print(fmt.Sprintf("create users json decode err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("create users json decode err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	if err := newUser.Validate(); err != nil {
-		log.Print(fmt.Sprintf("create users validation err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("create users validation err=%s", err), ERROR)
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	if err := dao.CreateUser(newUser); err != nil {
-		log.Print(fmt.Sprintf("create users from dao err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("create users from dao err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -85,17 +85,17 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&updatedUser); err != nil {
-		log.Print(fmt.Sprintf("update users json decode err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("update users json decode err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if err := updatedUser.Validate(); err != nil {
-		log.Print(fmt.Sprintf("update users invalid user err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("update users invalid user err=%s", err), ERROR)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if err := dao.UpdateUser(int32(userId), updatedUser); err != nil {
-		log.Print(fmt.Sprintf("update users dao err=%s", err), ERROR)
+		logger.Print(fmt.Sprintf("update users dao err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

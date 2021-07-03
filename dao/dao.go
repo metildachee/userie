@@ -9,7 +9,6 @@ import (
 
 func GetUsers() (users []model.User, err error) {
 	// todo: access es and get all information of users
-
 	for i := 0; i < 10; i++ {
 		user := model.User{
 			ID:          int32(i),
@@ -38,7 +37,7 @@ func GetUser(userId int32) (user model.User, err error) {
 
 func CreateUser(new model.User) (err error) {
 	return
-	// todo: upsert into es and
+	// todo: upsert into es
 }
 
 func UpdateUser(id int32, new model.User) (err error) {
@@ -47,5 +46,6 @@ func UpdateUser(id int32, new model.User) (err error) {
 }
 
 func DeleteUser(id int32) (err error) {
+	// todo: remove from es
 	return
 }
