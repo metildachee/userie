@@ -4,10 +4,34 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/elastic/go-elasticsearch"
+	"github.com/metildachee/userie/logger"
 	"github.com/metildachee/userie/model"
 )
 
-func GetUsers() (users []model.User, err error) {
+type Dao struct {
+	cli *elasticsearch.Client
+}
+
+func (dao *Dao) Init() error {
+	es, err := elasticsearch.NewDefaultClient()
+	if err != nil {
+		logger.Print(fmt.Sprintf("failed to init es client %s", err), ERROR)
+		return err
+	}
+	dao.cli = es
+
+	res, err := dao.cli.Info()
+	if err != nil {
+		logger.Print(fmt.Sprintf("failed to get init info from es end point %s", err), ERROR)
+		return err
+	}
+
+	logger.Print(fmt.Sprintf("init es client successfully %s", res), INFO)
+	return nil
+}
+
+func (dao *Dao) GetUsers() (users []model.User, err error) {
 	// todo: access es and get all information of users
 	for i := 0; i < 10; i++ {
 		user := model.User{
@@ -23,7 +47,7 @@ func GetUsers() (users []model.User, err error) {
 	return
 }
 
-func GetUser(userId int32) (user model.User, err error) {
+func (dao *Dao) GetUser(userId int32) (user model.User, err error) {
 	// todo: access es and get all information of users
 	return model.User{
 		ID:          1,
@@ -35,17 +59,17 @@ func GetUser(userId int32) (user model.User, err error) {
 	}, nil
 }
 
-func CreateUser(new model.User) (err error) {
+func (dao *Dao) CreateUser(new model.User) (err error) {
 	return
 	// todo: upsert into es
 }
 
-func UpdateUser(id int32, new model.User) (err error) {
+func (dao *Dao) UpdateUser(id int32, new model.User) (err error) {
 	// todo: upsert into es
 	return
 }
 
-func DeleteUser(id int32) (err error) {
+func (dao *Dao) DeleteUser(id int32) (err error) {
 	// todo: remove from es
 	return
 }
