@@ -8,10 +8,10 @@ import (
 type User struct {
 	ID          string  `json:"id"`
 	Name        string  `json:"name"`
-	DOB         float64 `json:"dob"`
+	DOB         int32 `json:"dob"`
 	Address     string  `json:"address"`
 	Description string  `json:"description"`
-	Ctime       float64 `json:"ctime"`
+	Ctime       int32 `json:"ctime"`
 }
 
 func (u *User) Validate() (err error) {
@@ -26,7 +26,7 @@ func (u *User) Validate() (err error) {
 		return errors.New("invalid username")
 	}
 
-	if u.DOB >= float64(time.Now().UnixNano()) {
+	if u.DOB >= int32(time.Now().UnixNano()) {
 		return errors.New("invalid dob")
 	}
 
@@ -38,7 +38,7 @@ func (u *User) Validate() (err error) {
 		return errors.New("invalid description")
 	}
 
-	if u.Ctime > float64(time.Now().UnixNano()) {
+	if u.Ctime > int32(time.Now().UnixNano()) {
 		return errors.New("invalid ctime")
 	}
 	return nil

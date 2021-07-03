@@ -18,10 +18,10 @@ func TestInit(t *testing.T) {
 func TestCreateUser(t *testing.T) {
 	u := model.User{
 		Name:        "metchee",
-		DOB:         float64(time.Now().Unix()),
+		DOB:         int32(time.Now().Unix()),
 		Address:     "Kent Ridge",
 		Description: "default user info",
-		Ctime:       float64(time.Now().Unix()),
+		Ctime:       int32(time.Now().Unix()),
 	}
 
 	dao, err := NewDao()
@@ -34,8 +34,16 @@ func TestCreateUser(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")
-	user, err := dao.GetUser("4H59bHoBOTxfBxWqWN9B")
+	user, err := dao.GetUser("7n4bbXoBOTxfBxWqBt-q")
 	assert.Nil(t, err, "should not have err when getting user")
 	assert.NotNil(t, user, "user should not be nil")
 	fmt.Println("user", user)
+}
+
+func TestUpdateUser(t *testing.T) {
+
+}
+
+func TestDeleteUser(t *testing.T) {
+
 }

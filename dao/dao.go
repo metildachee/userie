@@ -1,55 +1,48 @@
 package dao
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
+	"reflect"
 
-	"github.com/elastic/go-elasticsearch"
-	"github.com/elastic/go-elasticsearch/esapi"
 	"github.com/metildachee/userie/logger"
 	"github.com/metildachee/userie/model"
+	elasticv7 "github.com/olivere/elastic/v7"
 )
 
 type Dao struct {
-	cli     *elasticsearch.Client
+	cli     *elasticv7.Client
 	cluster string
-	builder Query
-}
-
-type Query struct {
-	query  map[string]interface{}
-	match  map[string]interface{}
-	result map[string]interface{}
 }
 
 func NewDao() (*Dao, error) {
-	es, err := elasticsearch.NewDefaultClient()
+	es, err := elasticv7.NewSimpleClient(elasticv7.SetURL("http://127.0.0.1:9200"))
 	if err != nil {
 		logger.Print(fmt.Sprintf("failed to init es client %s", err), ERROR)
 		return nil, err
 	}
 	dao := &Dao{}
-	m := make(map[string]interface{})
 	dao.cli = es
 	dao.cluster = "usersg0"
-	dao.builder.query = m
-	dao.builder.match = m
-	dao.builder.result = m
 	logger.Print(fmt.Sprintf("init es client successfull"), INFO)
 	return dao, nil
 }
 
 func (dao *Dao) CheckInit() bool {
+	ctx := context.Background()
 	if dao.cli == nil {
 		return false
 	}
-	_, err := dao.cli.Info()
+	exists, err := dao.cli.IndexExists(dao.cluster).Do(ctx)
 	if err != nil {
-		logger.Print(fmt.Sprintf("es client is not inited %s", err), INFO)
+		logger.Print(fmt.Sprintf("error when getting index exists %s", err), ERROR)
+		return false
+	}
+
+	if !exists {
+		logger.Print(fmt.Sprintf("es index is not inited %s", err), ERROR)
 		return false
 	}
 	logger.Print(fmt.Sprintf("es client is inited"), INFO)
@@ -62,75 +55,50 @@ func (dao *Dao) GetUsers() (users []model.User, err error) {
 }
 
 func (dao *Dao) GetUser(id string) (user model.User, err error) {
+	ctx := context.Background()
 	logger.Print("getting user", INFO)
-	query, err := dao.AddMatch("_id", id).Build()
-	fmt.Println("query", query)
-	if err != nil {
-		return
+	if !dao.CheckInit() {
+		return user, errors.New("es client not init")
 	}
-
-	res, err := dao.Search(query)
-
+	query := elasticv7.NewMatchQuery("_id", id)
+	searchResult, err := dao.cli.Search().Index(dao.cluster).Query(query).Do(ctx)
 	if err != nil {
 		logger.Print(fmt.Sprintf("search err=%s", err), ERROR)
 		return
 	}
-	if res.IsError() {
-		var e map[string]interface{}
-		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
-			logger.Print(fmt.Sprintf("Error parsing the response body: %s", err), ERROR)
-		} else {
-			// Print the response status and error information.
-			logger.Print(fmt.Sprintf("[%s] %s: %s",
-				res.Status(),
-				e["error"].(map[string]interface{})["type"],
-				e["error"].(map[string]interface{})["reason"]), ERROR)
+	for _, item := range searchResult.Each(reflect.TypeOf(user)) {
+		if u, ok := item.(model.User); ok {
+			user = u
+			fmt.Printf("user details by %s: %s\n", u.ID, u.Name)
+			return
 		}
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(&dao.builder.result); err != nil {
-		logger.Print(fmt.Sprintf("json unmarshal err=%s", err), ERROR)
-	}
-	logger.Print("got results from es", INFO)
-	for _, hit := range dao.builder.result["hits"].(map[string]interface{})["hits"].([]interface{}) {
-		logger.Print(fmt.Sprintf(" * ID=%s, %s", hit.(map[string]interface{})["_id"], hit.(map[string]interface{})["_source"]), INFO)
-		if hit.(map[string]interface{})["_id"] == "" {
-			continue
-		}
-		user.ID = hit.(map[string]interface{})["_id"].(string)
-		user.Ctime = (hit.(map[string]interface{})["_source"].(map[string]interface{}))["ctime"].(float64)
-		user.Name = (hit.(map[string]interface{})["_source"].(map[string]interface{}))["name"].(string)
-		user.DOB = (hit.(map[string]interface{})["_source"].(map[string]interface{}))["dob"].(float64)
-		user.Description = (hit.(map[string]interface{})["_source"].(map[string]interface{}))["description"].(string)
-		user.Description = (hit.(map[string]interface{})["_source"].(map[string]interface{}))["address"].(string)
-		break
 	}
 	return
 }
 
 func (dao *Dao) CreateUser(new model.User) (err error) {
 	if !dao.CheckInit() {
-		logger.Print(fmt.Sprintf("es client is not inited %s", err), ERROR)
-		return errors.New("es client not initialised")
+		return errors.New("es client not init")
 	}
 
-	req, err := dao.GetIndexRequest(new)
+	ctx := context.Background()
+	doc, err := json.Marshal(new)
 	if err != nil {
-		logger.Print(fmt.Sprintf("%s", err), ERROR)
+		return err
+	}
+	fmt.Println(string(doc))
+	put1, err := dao.cli.Index().Index(dao.cluster).Id("").BodyJson(string(doc)).Do(ctx)
+	if err != nil {
+		fmt.Println("err", err)
 		return
 	}
 
-	res, err := req.Do(context.Background(), dao.cli)
+	_, err = dao.cli.Flush().Index(dao.cluster).Do(ctx)
 	if err != nil {
-		logger.Print(fmt.Sprintf("%s", err), ERROR)
-		return
+		panic(err)
 	}
-	defer res.Body.Close()
-	if res.IsError() {
-		logger.Print(fmt.Sprintf("[%s] error indexing doc", res.Status()), ERROR)
-		return errors.New("error while indexing document")
-	}
-	logger.Print(fmt.Sprintf("created doc successfully"), INFO)
+
+	logger.Print(fmt.Sprintf("Indexed user doc %s to index %s, type %s\n", put1.Id, put1.Index, put1.Type), INFO)
 	return
 }
 
@@ -142,49 +110,4 @@ func (dao *Dao) UpdateUser(id int32, new model.User) (err error) {
 func (dao *Dao) DeleteUser(id int32) (err error) {
 	// todo: remove from es
 	return
-}
-
-///
-
-func (dao *Dao) GetIndexRequest(doc model.User) (*esapi.IndexRequest, error) {
-	userDoc, err := json.Marshal(doc)
-	if err != nil {
-		logger.Print(fmt.Sprintf("json marshal failed=%s", err), ERROR)
-		return nil, err
-	}
-
-	return &esapi.IndexRequest{
-		Index:   dao.cluster,
-		Body:    strings.NewReader(string(userDoc)),
-		Refresh: "true",
-	}, nil
-}
-
-func (dao *Dao) Search(buf *bytes.Buffer) (*esapi.Response, error) {
-	logger.Print(fmt.Sprintf("searching in %s", dao.cluster), INFO)
-	return dao.cli.Search(
-		dao.cli.Search.WithContext(context.Background()),
-		dao.cli.Search.WithIndex(dao.cluster),
-		dao.cli.Search.WithBody(buf),
-		dao.cli.Search.WithTrackTotalHits(true),
-		dao.cli.Search.WithPretty())
-}
-
-func (dao *Dao) Build() (*bytes.Buffer, error) {
-	var buf bytes.Buffer
-	query := make(map[string]interface{})
-	query["query"] = dao.builder.match
-	if err := json.NewEncoder(&buf).Encode(query); err != nil {
-		logger.Print(fmt.Sprintf("build query failed %s", err), ERROR)
-		return nil, err
-	}
-	return &buf, nil
-}
-
-func (dao *Dao) AddMatch(field string, val interface{}) *Dao {
-	logger.Print("add match to builder", INFO)
-	q := make(map[string]interface{})
-	q[field] = val
-	dao.builder.match["match"] = q
-	return dao
 }
