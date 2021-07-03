@@ -60,6 +60,7 @@ func TestCreateMultipleUsers(t *testing.T) {
 	assert.Nil(t, err, "should not have error when get users")
 	assert.True(t, len(users) >= numOfUsersToCreate+1, "we created 6 items, should have equal or more")
 }
+
 func TestGetUser(t *testing.T) {
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")
