@@ -2,6 +2,7 @@ package dao
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -31,13 +32,51 @@ func TestCreateUser(t *testing.T) {
 	assert.Nil(t, err, "should not have error when indexing doc")
 }
 
+func TestCreateMultipleUsers(t *testing.T) {
+	var (
+		numOfUsersToCreate = 5
+		wg                 sync.WaitGroup
+	)
+	u := model.User{
+		Name:        "metchee",
+		DOB:         int32(time.Now().Unix()),
+		Address:     "Kent Ridge",
+		Description: "default user info",
+		Ctime:       int32(time.Now().Unix()),
+	}
+
+	dao, err := NewDao()
+	assert.Nil(t, err, "should not have error when init")
+
+	for i := 0; i < numOfUsersToCreate; i++ {
+		wg.Add(1)
+		go dao.CreateUser(u, &wg)
+	}
+	err = dao.CreateUser(u)
+	assert.Nil(t, err, "should not have error when create users")
+	wg.Wait()
+
+	users, err := dao.GetUsers(10)
+	assert.Nil(t, err, "should not have error when get users")
+	assert.True(t, len(users) >= numOfUsersToCreate+1, "we created 6 items, should have equal or more")
+}
 func TestGetUser(t *testing.T) {
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")
-	user, err := dao.GetUser("7n4bbXoBOTxfBxWqBt-q")
+	user, err := dao.GetUser("1")
 	assert.Nil(t, err, "should not have err when getting user")
 	assert.NotNil(t, user, "user should not be nil")
 	fmt.Println("user", user)
+}
+
+func TestGetUsers(t *testing.T) {
+	var (
+		minimumNumOfDocs = 5
+	)
+	dao, err := NewDao()
+	users, err := dao.GetUsers(10)
+	assert.Nil(t, err, "should not have error when get users")
+	assert.True(t, len(users) > minimumNumOfDocs)
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -63,7 +102,7 @@ func TestUpdateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	var (
-		userId      = "1"
+		userId = "1"
 	)
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")

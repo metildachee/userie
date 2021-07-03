@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/metildachee/userie/logger"
 	"github.com/metildachee/userie/model"
@@ -52,17 +53,37 @@ func (dao *Dao) CheckInit() bool {
 	return true
 }
 
-func (dao *Dao) GetUsers() (users []model.User, err error) {
-	// todo: access es and get all information of users
+func (dao *Dao) GetUsers(limit int) (users []model.User, err error) {
+	if !dao.CheckInit() {
+		return users, errors.New("es client not init")
+	}
+	query := elasticv7.NewBoolQuery().
+		Must(elasticv7.NewExistsQuery("id")) // see: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-exists-query.html
+
+	searchResult, err := dao.cli.Search().
+		Index(dao.cluster).
+		Query(query).
+		From(0).
+		Size(limit).
+		Do(dao.ctx)
+	if err != nil {
+		logger.Print(fmt.Sprintf("search err=%s", err), ERROR)
+		return
+	}
+	for _, item := range searchResult.Each(reflect.TypeOf(model.User{})) {
+		if u, ok := item.(model.User); ok {
+			fmt.Printf("user details by %s: %s\n", u.ID, u.Name)
+			users = append(users, u)
+		}
+	}
 	return
 }
 
 func (dao *Dao) GetUser(id string) (user model.User, err error) {
-	logger.Print("getting user", INFO)
 	if !dao.CheckInit() {
 		return user, errors.New("es client not init")
 	}
-	query := elasticv7.NewMatchQuery("_id", id)
+	query := elasticv7.NewTermQuery("id", id) // see: https://www.elastic.co/guide/en/elasticsearch/reference/6.8/query-dsl-term-query.html
 	searchResult, err := dao.cli.Search().
 		Index(dao.cluster).
 		Query(query).
@@ -81,7 +102,11 @@ func (dao *Dao) GetUser(id string) (user model.User, err error) {
 	return user, errors.New("nil hit")
 }
 
-func (dao *Dao) CreateUser(new model.User) (err error) {
+func (dao *Dao) CreateUser(new model.User, wg ...*sync.WaitGroup) (err error) {
+	if len(wg) > 0 {
+		defer wg[0].Done()
+	}
+
 	if !dao.CheckInit() {
 		return errors.New("es client not init")
 	}
