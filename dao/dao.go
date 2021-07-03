@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -17,6 +18,12 @@ import (
 type Dao struct {
 	cli     *elasticsearch.Client
 	cluster string
+	builder Query
+}
+
+type Query struct {
+	query map[string]interface{}
+	match map[string]interface{}
 }
 
 func NewDao() *Dao {
@@ -65,15 +72,30 @@ func (dao *Dao) GetUsers() (users []model.User, err error) {
 }
 
 func (dao *Dao) GetUser(userId int32) (user model.User, err error) {
-	// todo: access es and get all information of users
-	return model.User{
-		ID:          1,
-		Name:        "metchee",
-		DOB:         1625276913,
-		Address:     "Kent Ridge",
-		Description: "default user description",
-		Ctime:       1625276913,
-	}, nil
+	query, err := dao.AddMatch("_id", userId).Build()
+	if err != nil {
+		return
+	}
+
+	res, err := dao.Search(query)
+	if res.IsError() {
+		var e map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
+			log.Fatalf("Error parsing the response body: %s", err)
+		} else {
+			// Print the response status and error information.
+			logger.Print(fmt.Sprintf("[%s] %s: %s",
+				res.Status(),
+				e["error"].(map[string]interface{})["type"],
+				e["error"].(map[string]interface{})["reason"]), ERROR)
+		}
+	}
+
+	if err != nil {
+		logger.Print(fmt.Sprintf("search %s", err), ERROR)
+		return
+	}
+	return
 }
 
 func (dao *Dao) CreateUser(new model.User) (err error) {
@@ -101,6 +123,18 @@ func (dao *Dao) CreateUser(new model.User) (err error) {
 	return
 }
 
+func (dao *Dao) UpdateUser(id int32, new model.User) (err error) {
+	// todo: upsert into es
+	return
+}
+
+func (dao *Dao) DeleteUser(id int32) (err error) {
+	// todo: remove from es
+	return
+}
+
+///
+
 func (dao *Dao) GetIndexRequest(doc model.User) (*esapi.IndexRequest, error) {
 	userDoc, err := json.Marshal(doc)
 	if err != nil {
@@ -115,12 +149,26 @@ func (dao *Dao) GetIndexRequest(doc model.User) (*esapi.IndexRequest, error) {
 	}, nil
 }
 
-func (dao *Dao) UpdateUser(id int32, new model.User) (err error) {
-	// todo: upsert into es
-	return
+func (dao *Dao) Search(buf *bytes.Buffer) (*esapi.Response, error) {
+	return dao.cli.Search(
+		dao.cli.Search.WithContext(context.Background()),
+		dao.cli.Search.WithIndex(dao.cluster),
+		dao.cli.Search.WithBody(buf),
+		dao.cli.Search.WithTrackTotalHits(true),
+		dao.cli.Search.WithPretty())
 }
 
-func (dao *Dao) DeleteUser(id int32) (err error) {
-	// todo: remove from es
-	return
+func (dao *Dao) Build() (*bytes.Buffer, error) {
+	var buf bytes.Buffer
+	dao.builder.query["query"] = dao.builder.match
+	if err := json.NewEncoder(&buf).Encode(dao.builder.query); err != nil {
+		logger.Print(fmt.Sprintf("build query failed %s", err), ERROR)
+		return nil, err
+	}
+	return &buf, nil
+}
+
+func (dao *Dao) AddMatch(field string, val interface{}) *Dao {
+	dao.builder.match[field] = val
+	return dao
 }
