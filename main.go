@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/metildachee/userie/api"
@@ -40,5 +39,5 @@ func main() {
 	u := prefix.Path("/user").Subrouter()
 	u.HandleFunc("/{id}", api.GetUser).Methods(http.MethodGet)
 
-	log.Fatal(http.ListenAndServe(os.Getenv(env.ServerPort), r))
+	log.Fatal(http.ListenAndServe(env.GetServerEndpoint(), r))
 }

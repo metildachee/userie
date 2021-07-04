@@ -19,19 +19,13 @@ func SetConfig(configPath string) (config models.Configuration, err error) {
 		return
 	}
 
-	if !valid(config) {
+	if !config.Validate(){
 		return config, errors.New("invalid configuration file")
 	}
 
-	os.Setenv("ELASTIC_ENDPOINT", config.ElasticEndpoint)
-	os.Setenv("CLUSTER_NAME", config.ClusterName)
-	os.Setenv("SERVER_PORT", config.ServerPort)
+	os.Setenv(config.GetElasticEndpointEnvName(), config.ElasticEndpoint)
+	os.Setenv(config.GetClusterNameEnvName(), config.ClusterName)
+	os.Setenv(config.GetServerEnvName(), config.ServerPort)
 	return
 }
 
-func valid(config models.Configuration) bool {
-	if config.ServerPort == "" || config.ClusterName == "" || config.ElasticEndpoint == "" {
-		return false
-	}
-	return true
-}
