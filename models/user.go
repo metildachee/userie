@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -37,4 +38,8 @@ func (u *User) Validate() (err error) {
 		return errors.New("invalid ctime")
 	}
 	return nil
+}
+
+func (u *User) ToString() string {
+	return fmt.Sprintf("%v", u)
 }
