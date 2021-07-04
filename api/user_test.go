@@ -17,12 +17,15 @@ import (
 )
 
 func TestGetUserInvalid(t *testing.T) {
+	ctx := context.Background()
 	userId, user := 0, models.User{}
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/user/%d", userId), nil)
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/user/{id}", GetUser)
+	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
+		GetUser(w, r, ctx)
+	})
 	router.ServeHTTP(resp, req)
 
 	err := json.NewDecoder(resp.Body).Decode(&user)
@@ -32,12 +35,15 @@ func TestGetUserInvalid(t *testing.T) {
 }
 
 func TestGetUserValid(t *testing.T) {
+	ctx := context.Background()
 	userId, user := 1, models.User{}
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/user/%d", userId), nil)
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/user/{id}", GetUser)
+	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
+		GetUser(w, r, ctx)
+	})
 	router.ServeHTTP(resp, req)
 
 	err := json.NewDecoder(resp.Body).Decode(&user)
@@ -52,7 +58,7 @@ func TestGetAllWithLimit(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/users/limit={limit}", func (w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/users/limit={limit}", func(w http.ResponseWriter, r *http.Request) {
 		GetAll(w, r, context.Background())
 	})
 	router.ServeHTTP(resp, req)
@@ -69,7 +75,7 @@ func TestGetAllDefault(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/users", func (w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
 		GetAll(w, r, context.Background())
 	})
 	router.ServeHTTP(resp, req)
@@ -88,7 +94,9 @@ func TestDeleteUser(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/user/{id}", GetUser)
+	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
+		GetUser(w, r, context.Background())
+	})
 	router.ServeHTTP(resp, req)
 
 	err := json.NewDecoder(resp.Body).Decode(&user)
@@ -101,7 +109,9 @@ func TestDeleteUser(t *testing.T) {
 	resp = httptest.NewRecorder()
 
 	router = mux.NewRouter()
-	router.HandleFunc("/api/user/{id}", DeleteUser)
+	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
+		DeleteUser(w, r, context.Background())
+	})
 	router.ServeHTTP(resp, req)
 
 	assert.EqualValues(t, http.StatusNoContent, resp.Code, "response code is not ok")
@@ -111,7 +121,9 @@ func TestDeleteUser(t *testing.T) {
 	resp = httptest.NewRecorder()
 
 	router = mux.NewRouter()
-	router.HandleFunc("/api/user/{id}", GetUser)
+	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
+		GetUser(w, r, context.Background())
+	})
 	router.ServeHTTP(resp, req)
 
 	u := models.User{}
@@ -137,7 +149,9 @@ func TestCreateUser(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/users", CreateUser)
+	router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
+		CreateUser(w, r, context.Background())
+	})
 	router.ServeHTTP(resp, req)
 
 	var id int
@@ -158,7 +172,9 @@ func TestUpdateUser(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/user/{id}", GetUser)
+	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
+		GetUser(w, r, context.Background())
+	})
 	router.ServeHTTP(resp, getReq)
 
 	err := json.NewDecoder(resp.Body).Decode(&user)
@@ -173,7 +189,9 @@ func TestUpdateUser(t *testing.T) {
 	updateReq, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/api/user/%s", userId), bytes.NewBuffer(jsonBody))
 	resp = httptest.NewRecorder()
 
-	router.HandleFunc("/api/user/{id}", UpdateUser)
+	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
+		UpdateUser(w, r, context.Background())
+	})
 	router.ServeHTTP(resp, updateReq)
 
 	require.EqualValues(t, http.StatusOK, resp.Code, "response code is not ok")

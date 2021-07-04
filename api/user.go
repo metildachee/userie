@@ -48,7 +48,7 @@ func GetAll(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 		}
 	}
 
-	users, err := dao.GetAll(limit)
+	users, err := dao.GetAll(ctx, limit)
 	if err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -89,7 +89,7 @@ func GetUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	}
 
 	var user models.User
-	if user, err = dao.GetById(userId); err != nil {
+	if user, err = dao.GetById(ctx, userId); err != nil {
 		if err.Error() == "nil hit" {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -135,7 +135,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	}
 
 	id := ""
-	if id, err = dao.Create(newUser); err != nil {
+	if id, err = dao.Create(ctx, newUser); err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -179,7 +179,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if err := dao.Update(updatedUser); err != nil {
+	if err := dao.Update(ctx, updatedUser); err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -209,7 +209,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	}
 	span.LogFields(log.String("user_id", userId))
 
-	if err := dao.Delete(userId); err != nil {
+	if err := dao.Delete(ctx, userId); err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

@@ -3,7 +3,6 @@ package elasticsearch
 import (
 	"context"
 	"errors"
-	"os"
 
 	"github.com/google/logger"
 	"github.com/metildachee/userie/models"
@@ -25,7 +24,7 @@ func NewDao(ctx context.Context) (*UserImplDao, error) {
 
 	dao := &UserImplDao{}
 	dao.cli = es
-	dao.cluster = os.Getenv(config.GetClusterName())
+	dao.cluster = config.GetClusterName()
 	span.LogKV("es client init successfully")
 	return dao, nil
 }

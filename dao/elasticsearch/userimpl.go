@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/google/logger"
 	"github.com/metildachee/userie/models"
 	elasticv7 "github.com/olivere/elastic/v7"
 	"github.com/opentracing/opentracing-go"
@@ -114,6 +115,7 @@ func (dao *UserImplDao) create(ctx context.Context, new models.User, wg ...*sync
 	doc, err := json.Marshal(new)
 	if err != nil {
 		ext.LogError(span, err)
+		fmt.Println("json marshal err", err)
 		return
 	}
 
@@ -124,6 +126,7 @@ func (dao *UserImplDao) create(ctx context.Context, new models.User, wg ...*sync
 		Do(ctx)
 	if err != nil {
 		ext.LogError(span, err)
+		fmt.Println("index document failed", err, "cluster name", dao.cluster)
 		return
 	}
 
@@ -132,6 +135,7 @@ func (dao *UserImplDao) create(ctx context.Context, new models.User, wg ...*sync
 		Do(ctx)
 	if err != nil {
 		ext.LogError(span, err)
+		fmt.Println("flushing index failed", err)
 		return
 	}
 
@@ -171,6 +175,7 @@ func (dao *UserImplDao) Update(ctx context.Context, updated models.User) (err er
 
 	doc, err := json.Marshal(updated)
 	if err != nil {
+		logger.Error(err)
 		ext.LogError(span, err)
 		return
 	}
@@ -181,6 +186,7 @@ func (dao *UserImplDao) Update(ctx context.Context, updated models.User) (err er
 		Do(ctx)
 	if err != nil {
 		ext.LogError(span, err)
+		logger.Error(err)
 		return
 	}
 	span.LogFields(
