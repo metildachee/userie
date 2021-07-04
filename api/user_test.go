@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -51,7 +52,9 @@ func TestGetAllWithLimit(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/users/limit={limit}", GetAll)
+	router.HandleFunc("/api/users/limit={limit}", func (w http.ResponseWriter, r *http.Request) {
+		GetAll(w, r, context.Background())
+	})
 	router.ServeHTTP(resp, req)
 
 	err := json.NewDecoder(resp.Body).Decode(&users)
@@ -66,7 +69,9 @@ func TestGetAllDefault(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/users", GetAll)
+	router.HandleFunc("/api/users", func (w http.ResponseWriter, r *http.Request) {
+		GetAll(w, r, context.Background())
+	})
 	router.ServeHTTP(resp, req)
 
 	err := json.NewDecoder(resp.Body).Decode(&users)

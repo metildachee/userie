@@ -1,3 +1,5 @@
 elastic_endpoint: "http://127.0.0.1:9200"
-server_port: "8080"
+server_port: ":8080"
 cluster_name: "usersg0"
+tracer:
+  service_name: "userie"
