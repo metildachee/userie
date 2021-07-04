@@ -16,7 +16,7 @@ import (
 type UserImplDao struct {
 	cli     *elasticv7.Client
 	cluster string
-	safe   SafeCounter
+	safe    SafeCounter
 	ctx     context.Context
 }
 
@@ -69,20 +69,20 @@ func (dao *UserImplDao) GetById(id string) (user models.User, err error) {
 	return user, errors.New("nil hit")
 }
 
-func (dao *UserImplDao) Create(new models.User, wg ...*sync.WaitGroup) (err error) {
+func (dao *UserImplDao) Create(new models.User, wg ...*sync.WaitGroup) (id string, err error) {
 	if len(wg) > 0 {
 		defer wg[0].Done()
 	}
 	if !dao.CheckInit() {
-		return errors.New("es client not init")
+		return id, errors.New("es client not init")
 	}
-	if err = dao.create(new); err != nil {
+	if id, err = dao.create(new); err != nil {
 		return
 	}
 	return
 }
 
-func (dao *UserImplDao) create(new models.User, wg ...*sync.WaitGroup) (err error) {
+func (dao *UserImplDao) create(new models.User, wg ...*sync.WaitGroup) (id string, err error) {
 	if len(wg) > 0 {
 		defer wg[0].Done()
 	}
@@ -90,7 +90,7 @@ func (dao *UserImplDao) create(new models.User, wg ...*sync.WaitGroup) (err erro
 	new.ID = dao.safe.GetCount()
 	doc, err := json.Marshal(new)
 	if err != nil {
-		return err
+		return
 	}
 	put1, err := dao.cli.Index().Index(dao.cluster).Id(new.ID).BodyJson(string(doc)).Do(dao.ctx)
 	if err != nil {
@@ -103,6 +103,7 @@ func (dao *UserImplDao) create(new models.User, wg ...*sync.WaitGroup) (err erro
 		panic(err)
 	}
 
+	id = put1.Id
 	logger.Print(fmt.Sprintf("Indexed user doc %s to index %s, type %s\n", put1.Id, put1.Index, put1.Type), INFO)
 	return
 }

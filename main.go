@@ -1,20 +1,33 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/metildachee/userie/handler"
+	"github.com/metildachee/userie/api"
+)
+
+var (
+	port string
 )
 
 func main() {
-	r := mux.NewRouter()
+	flag.StringVar(&port, "port", ":8080", "server listen port")
+	flag.Parse()
 
-	r.HandleFunc("/api/users", handler.GetUsers).Methods("GET")
-	r.HandleFunc("/api/user/{id}", handler.GetUser).Methods("GET")
-	r.HandleFunc("/api/users", handler.CreateUser).Methods("CREATE")
-	r.HandleFunc("/api/users/{id}", handler.UpdateUser).Methods("PUT")
-	r.HandleFunc("/api/users/{id}", handler.DeleteUser).Methods("DELETE")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	r := mux.NewRouter()
+	prefix := r.PathPrefix("/api").Subrouter()
+
+	us := prefix.PathPrefix("/users").Subrouter()
+	us.HandleFunc("/limit={limit}", api.GetAll).Methods(http.MethodGet)
+	us.HandleFunc("/", api.CreateUser).Methods(http.MethodPost)
+	us.HandleFunc("/{id}", api.UpdateUser).Methods(http.MethodPut)
+	us.HandleFunc("/{id}", api.DeleteUser).Methods(http.MethodDelete)
+
+	u := prefix.Path("/user").Subrouter()
+	u.HandleFunc("/{id}", api.GetUser).Methods(http.MethodGet)
+	
+	log.Fatal(http.ListenAndServe(port, r))
 }
