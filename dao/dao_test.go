@@ -61,6 +61,31 @@ func TestCreateMultipleUsers(t *testing.T) {
 	assert.True(t, len(users) >= numOfUsersToCreate+1, "we created 6 items, should have equal or more")
 }
 
+func TestBatchCreateUser(t *testing.T) {
+	var (
+		numOfUsers = 10
+	)
+	users := make([]model.User, 0)
+	for i := 0; i < numOfUsers; i++ {
+		u := model.User{
+			Name:        fmt.Sprintf("metchee %d", i),
+			DOB:         int32(time.Now().Unix()),
+			Address:     fmt.Sprintf("kent ridge %d", i),
+			Description: fmt.Sprintf("default user info %d", i),
+			Ctime:       int32(time.Now().Unix()),
+		}
+		users = append(users, u)
+	}
+	dao, err := NewDao()
+	assert.Nil(t, err, "should not have error when init")
+	err = dao.BatchCreateUsers(users)
+	assert.Nil(t, err, "should not have error when create users")
+
+	res, err := dao.GetUsers(numOfUsers)
+	assert.Nil(t, err, "should not have error when get users")
+	assert.GreaterOrEqual(t, len(res), numOfUsers, "we created many items, should have equal or more")
+}
+
 func TestGetUser(t *testing.T) {
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")

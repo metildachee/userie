@@ -106,30 +106,54 @@ func (dao *Dao) CreateUser(new model.User, wg ...*sync.WaitGroup) (err error) {
 	if len(wg) > 0 {
 		defer wg[0].Done()
 	}
-
 	if !dao.CheckInit() {
 		return errors.New("es client not init")
 	}
+	if err = dao.createUser(new); err != nil {
+		return
+	}
+	return
+}
 
-	ctx := context.Background()
+/* creates user straight away without checking if there are clients */
+func (dao *Dao) createUser(new model.User, wg ...*sync.WaitGroup) (err error) {
+	if len(wg) > 0 {
+		defer wg[0].Done()
+	}
+
 	new.ID = dao.GetCount()
 	doc, err := json.Marshal(new)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(doc))
-	put1, err := dao.cli.Index().Index(dao.cluster).Id(new.ID).BodyJson(string(doc)).Do(ctx)
+	put1, err := dao.cli.Index().Index(dao.cluster).Id(new.ID).BodyJson(string(doc)).Do(dao.ctx)
 	if err != nil {
 		fmt.Println("err", err)
 		return
 	}
 
-	_, err = dao.cli.Flush().Index(dao.cluster).Do(ctx)
+	_, err = dao.cli.Flush().Index(dao.cluster).Do(dao.ctx)
 	if err != nil {
 		panic(err)
 	}
 
 	logger.Print(fmt.Sprintf("Indexed user doc %s to index %s, type %s\n", put1.Id, put1.Index, put1.Type), INFO)
+	return
+}
+
+func (dao *Dao) BatchCreateUsers(new []model.User) (err error) {
+	if !dao.CheckInit() {
+		return errors.New("es client not init")
+	}
+	var wg sync.WaitGroup
+
+	for _, item := range new {
+		wg.Add(1)
+		go dao.createUser(item, &wg)
+	}
+	wg.Wait()
+
+	logger.Print("batch index done", INFO)
 	return
 }
 
