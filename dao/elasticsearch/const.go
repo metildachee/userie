@@ -1,4 +1,4 @@
-package dao
+package elasticsearch
 
 const (
 	INFO = "info"

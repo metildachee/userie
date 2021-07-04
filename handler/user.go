@@ -10,6 +10,7 @@ import (
 	"github.com/metildachee/userie/dao"
 	"github.com/metildachee/userie/logger"
 	"github.com/metildachee/userie/model"
+	"github.com/metildachee/userie/models"
 )
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +54,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	newUser := model.User{}
+	newUser := models.User{}
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
 		logger.Print(fmt.Sprintf("create users json decode err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -74,7 +75,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	params := mux.Vars(r)
-	updatedUser := model.User{}
+	updatedUser := models.User{}
 	if params["id"] == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
