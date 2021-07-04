@@ -156,6 +156,19 @@ func (dao *Dao) UpdateUser(updated model.User) (err error) {
 	return
 }
 
+func (dao *Dao) UpdateUserName(id, newName string) (err error) {
+	if !dao.CheckInit() {
+		return errors.New("es client not init")
+	}
+	update, err := dao.cli.Update().Index(dao.cluster).Id(id).Doc(map[string]interface{}{"name": newName}).Do(dao.ctx)
+	if err != nil {
+		logger.Print(fmt.Sprintf("es error %s", err), ERROR)
+		return
+	}
+	logger.Print(fmt.Sprintf("New version of user %q is now %d", update.Id, update.Version), INFO)
+	return
+}
+
 func (dao *Dao) DeleteUser(id string) (err error) {
 	if !dao.CheckInit() {
 		return errors.New("es client not init")

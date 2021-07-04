@@ -91,8 +91,6 @@ func TestUpdateUser(t *testing.T) {
 	assert.Nil(t, err, "should not have err when getting user")
 	assert.NotNil(t, user, "user should not be nil")
 
-	time.Sleep(5 * time.Second)
-
 	user.Description = updatedDesc
 	err = dao.UpdateUser(user)
 	assert.Nil(t, err, "should not have err when update user")
@@ -115,4 +113,24 @@ func TestDeleteUser(t *testing.T) {
 	assert.Nil(t, err, "should not have err when delete user")
 	_, err = dao.GetUser(userId)
 	assert.NotNil(t, err)
+}
+
+func TestUpdateUserName(t *testing.T) {
+	var (
+		userId      = "1"
+		updatedName = "meow meow"
+	)
+	dao, err := NewDao()
+	assert.Nil(t, err, "should not have error when init")
+	user, err := dao.GetUser(userId)
+	assert.Nil(t, err, "should not have err when getting user")
+	assert.NotNil(t, user, "user should not be nil")
+
+	time.Sleep(5 * time.Second)
+
+	err = dao.UpdateUserName(userId, updatedName)
+	assert.Nil(t, err, "should not have err when update user")
+	updatedUser, err := dao.GetUser(user.ID)
+	assert.Nil(t, err, "should not have err when getting user")
+	assert.EqualValues(t, updatedUser.Name, updatedName, "should not have the same value")
 }
