@@ -12,7 +12,7 @@ import (
 )
 
 func TestInit(t *testing.T) {
-	_, err := NewDao()
+	_, err := NewDao(ctx)
 	require.Nil(t, err, "initialise es client should not have error")
 }
 
@@ -25,7 +25,7 @@ func TestCreateUser(t *testing.T) {
 		Ctime:       int32(time.Now().Unix()),
 	}
 
-	dao, err := NewDao()
+	dao, err := NewDao(ctx)
 	assert.Nil(t, err, "should not have error when init")
 
 	id, err := dao.Create(u)
@@ -46,7 +46,7 @@ func TestCreateMultipleUsers(t *testing.T) {
 		Ctime:       int32(time.Now().Unix()),
 	}
 
-	dao, err := NewDao()
+	dao, err := NewDao(ctx)
 	assert.Nil(t, err, "should not have error when init")
 
 	for i := 0; i < numOfUsersToCreate; i++ {
@@ -78,7 +78,7 @@ func TestBatchCreateUser(t *testing.T) {
 		}
 		users = append(users, u)
 	}
-	dao, err := NewDao()
+	dao, err := NewDao(ctx)
 	assert.Nil(t, err, "should not have error when init")
 	err = dao.BatchCreate(users)
 	assert.Nil(t, err, "should not have error when create users")
@@ -89,7 +89,7 @@ func TestBatchCreateUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	dao, err := NewDao()
+	dao, err := NewDao(ctx)
 	assert.Nil(t, err, "should not have error when init")
 	user, err := dao.GetById("1")
 	assert.Nil(t, err, "should not have err when getting user")
@@ -101,7 +101,7 @@ func TestGetUsers(t *testing.T) {
 	var (
 		minimumNumOfDocs = 5
 	)
-	dao, err := NewDao()
+	dao, err := NewDao(ctx)
 	users, err := dao.GetAll(10)
 	assert.Nil(t, err, "should not have error when get users")
 	assert.True(t, len(users) > minimumNumOfDocs)
@@ -112,7 +112,7 @@ func TestUpdateUser(t *testing.T) {
 		userId      = "1"
 		updatedDesc = "let me change this up"
 	)
-	dao, err := NewDao()
+	dao, err := NewDao(ctx)
 	assert.Nil(t, err, "should not have error when init")
 	user, err := dao.GetById(userId)
 	assert.Nil(t, err, "should not have err when getting user")
@@ -130,7 +130,7 @@ func TestDeleteUser(t *testing.T) {
 	var (
 		userId = "1"
 	)
-	dao, err := NewDao()
+	dao, err := NewDao(ctx)
 	assert.Nil(t, err, "should not have error when init")
 	user, err := dao.GetById(userId)
 	assert.Nil(t, err, "should not have err when getting user")
@@ -147,7 +147,7 @@ func TestUpdateUserName(t *testing.T) {
 		userId      = "2"
 		updatedName = "meow meow"
 	)
-	dao, err := NewDao()
+	dao, err := NewDao(ctx)
 	assert.Nil(t, err, "should not have error when init")
 	user, err := dao.GetById(userId)
 	assert.Nil(t, err, "should not have err when getting user")

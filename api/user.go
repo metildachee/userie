@@ -32,7 +32,7 @@ func GetAll(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 
 	w = writeJsonHeader(w)
 
-	dao, err := elasticsearch.NewDao()
+	dao, err := elasticsearch.NewDao(ctx)
 	if err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -74,7 +74,7 @@ func GetUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	defer span.Finish()
 
 	w = writeJsonHeader(w)
-	dao, err := elasticsearch.NewDao()
+	dao, err := elasticsearch.NewDao(ctx)
 	if err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -114,7 +114,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	defer span.Finish()
 
 	w = writeJsonHeader(w)
-	dao, err := elasticsearch.NewDao()
+	dao, err := elasticsearch.NewDao(ctx)
 	if err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -156,7 +156,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	ext.SpanKindRPCClient.Set(span)
 	defer span.Finish()
 
-	dao, err := elasticsearch.NewDao()
+	dao, err := elasticsearch.NewDao(ctx)
 	if err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -194,7 +194,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	ext.SpanKindRPCClient.Set(span)
 	defer span.Finish()
 
-	dao, err := elasticsearch.NewDao()
+	dao, err := elasticsearch.NewDao(ctx)
 	if err != nil {
 		ext.LogError(span, err)
 		w.WriteHeader(http.StatusInternalServerError)
