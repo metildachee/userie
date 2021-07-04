@@ -15,7 +15,7 @@ var (
 )
 
 func main() {
-	flag.StringVar(&configFilePath, "configFilePath", "configuration.json", "configuration file path")
+	flag.StringVar(&configFilePath, "configFilePath", "configuration.yml", "configuration file path")
 	flag.Parse()
 
 	if configFilePath == "" {
