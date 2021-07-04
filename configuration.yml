@@ -1,0 +1,3 @@
+elastic_endpoint: "127.0.0.1:9200"
+server_port: "8080"
+cluster_name: "usersg0"

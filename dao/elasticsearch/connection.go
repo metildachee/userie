@@ -3,20 +3,21 @@ package elasticsearch
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/metildachee/userie/logger"
 	elasticv7 "github.com/olivere/elastic/v7"
 )
 
 func NewDao() (*UserImplDao, error) {
-	es, err := elasticv7.NewSimpleClient(elasticv7.SetURL("http://127.0.0.1:9200"))
+	es, err := elasticv7.NewSimpleClient(elasticv7.SetURL(os.Getenv("ELASTIC_ENDPOINT")))
 	if err != nil {
 		logger.Print(fmt.Sprintf("failed to init es client %s", err), ERROR)
 		return nil, err
 	}
 	dao := &UserImplDao{}
 	dao.cli = es
-	dao.cluster = "usersg0"
+	dao.cluster = os.Getenv("CLUSTER_NAME")
 	dao.ctx = context.Background()
 	logger.Print(fmt.Sprintf("init es client successfull"), INFO)
 	return dao, nil

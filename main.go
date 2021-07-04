@@ -4,18 +4,29 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/metildachee/userie/api"
+	"github.com/metildachee/userie/utilities"
 )
 
 var (
-	port string
+	configFilePath string
 )
 
 func main() {
-	flag.StringVar(&port, "port", ":8080", "server listen port")
+	flag.StringVar(&configFilePath, "configFilePath", "configuration.json", "configuration file path")
 	flag.Parse()
+
+	if configFilePath == "" {
+		log.Fatal("invalid configuration file path")
+	}
+
+	env, err := utilities.SetConfig(configFilePath)
+	if err != nil {
+		log.Fatal("configuration cannot be read, aborting boot up")
+	}
 
 	r := mux.NewRouter()
 	prefix := r.PathPrefix("/api").Subrouter()
@@ -28,6 +39,6 @@ func main() {
 
 	u := prefix.Path("/user").Subrouter()
 	u.HandleFunc("/{id}", api.GetUser).Methods(http.MethodGet)
-	
-	log.Fatal(http.ListenAndServe(port, r))
+
+	log.Fatal(http.ListenAndServe(os.Getenv(env.ServerPort), r))
 }
