@@ -24,7 +24,7 @@ func TestGetUserInvalid(t *testing.T) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
-		GetUser(w, r, ctx)
+		GetUser(w, r)
 	})
 	router.ServeHTTP(resp, req)
 
@@ -42,7 +42,7 @@ func TestGetUserValid(t *testing.T) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
-		GetUser(w, r, ctx)
+		GetUser(w, r)
 	})
 	router.ServeHTTP(resp, req)
 
@@ -59,7 +59,7 @@ func TestGetAllWithLimit(t *testing.T) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/users/limit={limit}", func(w http.ResponseWriter, r *http.Request) {
-		GetAll(w, r, context.Background())
+		GetAll(w, r)
 	})
 	router.ServeHTTP(resp, req)
 
@@ -76,7 +76,7 @@ func TestGetAllDefault(t *testing.T) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
-		GetAll(w, r, context.Background())
+		GetAll(w, r)
 	})
 	router.ServeHTTP(resp, req)
 
@@ -95,7 +95,7 @@ func TestDeleteUser(t *testing.T) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
-		GetUser(w, r, context.Background())
+		GetUser(w, r)
 	})
 	router.ServeHTTP(resp, req)
 
@@ -110,7 +110,7 @@ func TestDeleteUser(t *testing.T) {
 
 	router = mux.NewRouter()
 	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
-		DeleteUser(w, r, context.Background())
+		DeleteUser(w, r)
 	})
 	router.ServeHTTP(resp, req)
 
@@ -122,7 +122,7 @@ func TestDeleteUser(t *testing.T) {
 
 	router = mux.NewRouter()
 	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
-		GetUser(w, r, context.Background())
+		GetUser(w, r)
 	})
 	router.ServeHTTP(resp, req)
 
@@ -150,7 +150,7 @@ func TestCreateUser(t *testing.T) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
-		CreateUser(w, r, context.Background())
+		CreateUser(w, r)
 	})
 	router.ServeHTTP(resp, req)
 
@@ -173,7 +173,7 @@ func TestUpdateUser(t *testing.T) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
-		GetUser(w, r, context.Background())
+		GetUser(w, r)
 	})
 	router.ServeHTTP(resp, getReq)
 
@@ -190,7 +190,7 @@ func TestUpdateUser(t *testing.T) {
 	resp = httptest.NewRecorder()
 
 	router.HandleFunc("/api/user/{id}", func(w http.ResponseWriter, r *http.Request) {
-		UpdateUser(w, r, context.Background())
+		UpdateUser(w, r)
 	})
 	router.ServeHTTP(resp, updateReq)
 

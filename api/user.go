@@ -16,7 +16,8 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-func GetAll(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func GetAll(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	span, _ := opentracing.StartSpanFromContext(ctx, "get all")
 	ext.SpanKindRPCClient.Set(span)
 	defer span.Finish()
@@ -62,13 +63,14 @@ func GetAll(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	}
 	w.WriteHeader(http.StatusOK)
 	span.LogFields(
-		log.String("event", "string-format"),
+		log.String("event", "get users result from es"),
 		log.String("value", fmt.Sprintf("%v", users)),
 	)
 	logger.Info("get all user request done, check tracer: ", span.Context())
 }
 
-func GetUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	span, _ := opentracing.StartSpanFromContext(ctx, "get user")
 	ext.SpanKindRPCClient.Set(span)
 	defer span.Finish()
@@ -108,7 +110,8 @@ func GetUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	logger.Info("get one user request done, check tracer: ", span.Context())
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	span, _ := opentracing.StartSpanFromContext(ctx, "create user")
 	ext.SpanKindRPCClient.Set(span)
 	defer span.Finish()
@@ -151,7 +154,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func UpdateUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	span, _ := opentracing.StartSpanFromContext(ctx, "update user")
 	ext.SpanKindRPCClient.Set(span)
 	defer span.Finish()
@@ -189,7 +193,8 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
 	logger.Info("update user request done, check tracer: ", span.Context())
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	span, _ := opentracing.StartSpanFromContext(ctx, "delete user")
 	ext.SpanKindRPCClient.Set(span)
 	defer span.Finish()
