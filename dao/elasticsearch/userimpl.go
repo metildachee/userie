@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/metildachee/userie/logger"
+	"github.com/google/logger"
 	"github.com/metildachee/userie/models"
 	elasticv7 "github.com/olivere/elastic/v7"
 )
@@ -31,10 +31,9 @@ func (dao *UserImplDao) GetAll(limit int) (users []models.User, err error) {
 		Index(dao.cluster).
 		Query(query).
 		From(0).
-		Size(limit).
 		Do(dao.ctx)
 	if err != nil {
-		logger.Print(fmt.Sprintf("search err=%s", err), ERROR)
+		logger.Info(fmt.Sprintf("search err=%s", err), ERROR)
 		return
 	}
 	for _, item := range searchResult.Each(reflect.TypeOf(models.User{})) {
@@ -56,7 +55,7 @@ func (dao *UserImplDao) GetById(id string) (user models.User, err error) {
 		Query(query).
 		Do(dao.ctx)
 	if err != nil {
-		logger.Print(fmt.Sprintf("search err=%s", err), ERROR)
+		logger.Info(fmt.Sprintf("search err=%s", err), ERROR)
 		return
 	}
 	for _, item := range searchResult.Each(reflect.TypeOf(user)) {
@@ -104,7 +103,7 @@ func (dao *UserImplDao) create(new models.User, wg ...*sync.WaitGroup) (id strin
 	}
 
 	id = put1.Id
-	logger.Print(fmt.Sprintf("Indexed user doc %s to index %s, type %s\n", put1.Id, put1.Index, put1.Type), INFO)
+	logger.Info(fmt.Sprintf("Indexed user doc %s to index %s, type %s\n", put1.Id, put1.Index, put1.Type), INFO)
 	return
 }
 
@@ -120,7 +119,7 @@ func (dao *UserImplDao) BatchCreate(new []models.User) (err error) {
 	}
 	wg.Wait()
 
-	logger.Print("batch index done", INFO)
+	logger.Info("batch index done", INFO)
 	return
 }
 
@@ -131,7 +130,7 @@ func (dao *UserImplDao) Update(updated models.User) (err error) {
 
 	doc, err := json.Marshal(updated)
 	if err != nil {
-		logger.Print(fmt.Sprintf("err when marshalling json %s", err), ERROR)
+		logger.Info(fmt.Sprintf("err when marshalling json %s", err), ERROR)
 		return
 	}
 	update, err := dao.cli.Index().
@@ -140,10 +139,10 @@ func (dao *UserImplDao) Update(updated models.User) (err error) {
 		BodyJson(string(doc)).
 		Do(dao.ctx)
 	if err != nil {
-		logger.Print(fmt.Sprintf("es error %s", err), ERROR)
+		logger.Info(fmt.Sprintf("es error %s", err), ERROR)
 		return
 	}
-	logger.Print(fmt.Sprintf("New version of user %q is now %d", update.Id, update.Version), INFO)
+	logger.Info(fmt.Sprintf("New version of user %q is now %d", update.Id, update.Version), INFO)
 	return
 }
 
@@ -153,10 +152,10 @@ func (dao *UserImplDao) UpdateUserName(id, newName string) (err error) {
 	}
 	update, err := dao.cli.Update().Index(dao.cluster).Id(id).Doc(map[string]interface{}{"name": newName}).Do(dao.ctx)
 	if err != nil {
-		logger.Print(fmt.Sprintf("es error %s", err), ERROR)
+		logger.Info(fmt.Sprintf("es error %s", err), ERROR)
 		return
 	}
-	logger.Print(fmt.Sprintf("New version of user %q is now %d", update.Id, update.Version), INFO)
+	logger.Info(fmt.Sprintf("New version of user %q is now %d", update.Id, update.Version), INFO)
 	return
 }
 
@@ -171,6 +170,6 @@ func (dao *UserImplDao) Delete(id string) (err error) {
 	if err != nil {
 		return
 	}
-	logger.Print("deleted successfully", INFO)
+	logger.Info("deleted successfully", INFO)
 	return
 }

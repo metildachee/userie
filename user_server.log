@@ -1,0 +1,26 @@
+INFO : 2021/07/04 21:23:07.886835 tracer.go:14: init jaegar service
+INFO : 2021/07/04 21:24:42.400089 tracer.go:14: init jaegar service
+INFO : 2021/07/04 21:42:58.573485 tracer.go:27: jaegar service initialised
+INFO : 2021/07/04 21:43:14.309451 connection.go:25: init es client successfullinfo
+INFO : 2021/07/04 21:43:14.339637 connection.go:42: es client is initedinfo
+INFO : 2021/07/04 21:43:14.418661 user.go:67: 5746e80ac861e887:4f4b8d022b6d1cd0:5746e80ac861e887:1
+INFO : 2021/07/04 21:44:15.454476 tracer.go:27: jaegar service initialised
+INFO : 2021/07/04 21:44:17.200991 connection.go:25: init es client successfullinfo
+INFO : 2021/07/04 21:44:17.213077 connection.go:42: es client is initedinfo
+INFO : 2021/07/04 21:44:17.229998 user.go:67: &{service_name 3232235854 0xc00009dd10 0xc0000aee20 {{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}} {0x1726e80} 0x1088780 0x13814e0 {false false <nil> 256 false 0} {} map[0:0xc0001d4540 1:0xc0001d6000 2:0xc0001d61e0 0:0xc0000b20a8 zipkin-span-format:0xc0000b20b0] map[0:0xc0001d4540 1:0xc0001d6000 2:0xc0001d61e0 0:0xc0000b20a8 zipkin-span-format:0xc0000b20b0] {[]} [{jaeger.version Go-2.29.1} {hostname C02D42CLMD6P} {ip 192.168.1.78}] {service_name 52f989785eed4585 [{jaeger.version Go-2.29.1} {hostname C02D42CLMD6P} {ip 192.168.1.78}]} <nil> 0xc0000af2a0 {}}
+INFO : 2021/07/04 21:47:00.250890 tracer.go:27: jaegar service initialised
+INFO : 2021/07/04 21:47:02.729022 connection.go:25: init es client successfullinfo
+INFO : 2021/07/04 21:47:02.738177 connection.go:42: es client is initedinfo
+INFO : 2021/07/04 21:47:02.755811 user.go:67: 5a7a0cb8b03abce7:31d8a8c0c920ab84:5a7a0cb8b03abce7:1
+INFO : 2021/07/04 21:47:30.674495 connection.go:25: init es client successfullinfo
+INFO : 2021/07/04 21:47:30.677314 connection.go:42: es client is initedinfo
+INFO : 2021/07/04 21:47:30.688040 user.go:67: 5a7a0cb8b03abce7:6e5a18ddfeb4b75e:5a7a0cb8b03abce7:1
+INFO : 2021/07/04 21:47:40.555389 connection.go:25: init es client successfullinfo
+INFO : 2021/07/04 21:47:40.557606 connection.go:42: es client is initedinfo
+INFO : 2021/07/04 21:47:40.565711 user.go:67: 5a7a0cb8b03abce7:7ed1e32461ef4ba5:5a7a0cb8b03abce7:1
+INFO : 2021/07/04 21:47:41.298091 connection.go:25: init es client successfullinfo
+INFO : 2021/07/04 21:47:41.301401 connection.go:42: es client is initedinfo
+INFO : 2021/07/04 21:47:41.313229 user.go:67: 5a7a0cb8b03abce7:197e1cf074619e06:5a7a0cb8b03abce7:1
+INFO : 2021/07/04 21:47:42.220430 connection.go:25: init es client successfullinfo
+INFO : 2021/07/04 21:47:42.223571 connection.go:42: es client is initedinfo
+INFO : 2021/07/04 21:47:42.229961 user.go:67: 5a7a0cb8b03abce7:519282339927cc97:5a7a0cb8b03abce7:1

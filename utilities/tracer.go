@@ -1,9 +1,9 @@
 package utilities
 
 import (
-	"fmt"
 	"io"
 
+	"github.com/google/logger"
 	"github.com/opentracing/opentracing-go"
 	jaeger "github.com/uber/jaeger-client-go"
 	config "github.com/uber/jaeger-client-go/config"
@@ -22,7 +22,8 @@ func InitJaeger(service string) (opentracing.Tracer, io.Closer) {
 	}
 	tracer, closer, err := cfg.NewTracer(config.Logger(jaeger.StdLogger))
 	if err != nil {
-		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+		logger.Fatalf("cannot init Jaeger: %v\n", err)
 	}
+	logger.Info("jaegar service initialised")
 	return tracer, closer
 }

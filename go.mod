@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
+	github.com/google/logger v1.1.1
 	github.com/gorilla/mux v1.8.0
 	github.com/olivere/elastic/v7 v7.0.25
 	github.com/opentracing/opentracing-go v1.2.0
