@@ -27,7 +27,7 @@ func TestGetUserInvalid(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&user)
 	assert.NotNil(t, err, "json decoder err")
 	require.EqualValues(t, models.User{}, user, "response is nil")
-	assert.EqualValues(t, http.StatusBadRequest, resp.Code, "response code is not ok")
+	assert.EqualValues(t, http.StatusNotFound, resp.Code, "response code is not ok")
 }
 
 func TestGetUserValid(t *testing.T) {
@@ -76,7 +76,7 @@ func TestGetAllDefault(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	userId, user := "7", models.User{}
+	userId, user := "1", models.User{}
 
 	// can get
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/user/%s", userId), nil)
