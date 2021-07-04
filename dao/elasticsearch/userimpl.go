@@ -1,4 +1,4 @@
-package dao
+package elasticsearch
 
 import (
 	"context"
@@ -9,56 +9,23 @@ import (
 	"sync"
 
 	"github.com/metildachee/userie/logger"
-	"github.com/metildachee/userie/model"
+	"github.com/metildachee/userie/models"
 	elasticv7 "github.com/olivere/elastic/v7"
 )
 
-type Dao struct {
+type UserImplDao struct {
 	cli     *elasticv7.Client
 	cluster string
-	SafeCounter
-	ctx context.Context
+	safe   SafeCounter
+	ctx     context.Context
 }
 
-func NewDao() (*Dao, error) {
-	es, err := elasticv7.NewSimpleClient(elasticv7.SetURL("http://127.0.0.1:9200"))
-	if err != nil {
-		logger.Print(fmt.Sprintf("failed to init es client %s", err), ERROR)
-		return nil, err
-	}
-	dao := &Dao{}
-	dao.cli = es
-	dao.cluster = "usersg0"
-	dao.ctx = context.Background()
-	logger.Print(fmt.Sprintf("init es client successfull"), INFO)
-	return dao, nil
-}
-
-func (dao *Dao) CheckInit() bool {
-	ctx := context.Background()
-	if dao.cli == nil {
-		return false
-	}
-	exists, err := dao.cli.IndexExists(dao.cluster).Do(ctx)
-	if err != nil {
-		logger.Print(fmt.Sprintf("error when getting index exists %s", err), ERROR)
-		return false
-	}
-
-	if !exists {
-		logger.Print(fmt.Sprintf("es index is not inited %s", err), ERROR)
-		return false
-	}
-	logger.Print(fmt.Sprintf("es client is inited"), INFO)
-	return true
-}
-
-func (dao *Dao) GetUsers(limit int) (users []model.User, err error) {
+func (dao *UserImplDao) GetAll(limit int) (users []models.User, err error) {
 	if !dao.CheckInit() {
 		return users, errors.New("es client not init")
 	}
 	query := elasticv7.NewBoolQuery().
-		Must(elasticv7.NewExistsQuery("id")) // see: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-exists-query.html
+		Must(elasticv7.NewExistsQuery("id"))
 
 	searchResult, err := dao.cli.Search().
 		Index(dao.cluster).
@@ -70,8 +37,8 @@ func (dao *Dao) GetUsers(limit int) (users []model.User, err error) {
 		logger.Print(fmt.Sprintf("search err=%s", err), ERROR)
 		return
 	}
-	for _, item := range searchResult.Each(reflect.TypeOf(model.User{})) {
-		if u, ok := item.(model.User); ok {
+	for _, item := range searchResult.Each(reflect.TypeOf(models.User{})) {
+		if u, ok := item.(models.User); ok {
 			fmt.Printf("user details by %s: %s\n", u.ID, u.Name)
 			users = append(users, u)
 		}
@@ -79,7 +46,7 @@ func (dao *Dao) GetUsers(limit int) (users []model.User, err error) {
 	return
 }
 
-func (dao *Dao) GetUser(id string) (user model.User, err error) {
+func (dao *UserImplDao) GetById(id string) (user models.User, err error) {
 	if !dao.CheckInit() {
 		return user, errors.New("es client not init")
 	}
@@ -93,7 +60,7 @@ func (dao *Dao) GetUser(id string) (user model.User, err error) {
 		return
 	}
 	for _, item := range searchResult.Each(reflect.TypeOf(user)) {
-		if u, ok := item.(model.User); ok {
+		if u, ok := item.(models.User); ok {
 			user = u
 			fmt.Printf("user details by %s: %s\n", u.ID, u.Name)
 			return
@@ -102,29 +69,36 @@ func (dao *Dao) GetUser(id string) (user model.User, err error) {
 	return user, errors.New("nil hit")
 }
 
-func (dao *Dao) CreateUser(new model.User, wg ...*sync.WaitGroup) (err error) {
+func (dao *UserImplDao) Create(new models.User, wg ...*sync.WaitGroup) (err error) {
+	if len(wg) > 0 {
+		defer wg[0].Done()
+	}
+	if !dao.CheckInit() {
+		return errors.New("es client not init")
+	}
+	if err = dao.create(new); err != nil {
+		return
+	}
+	return
+}
+
+func (dao *UserImplDao) create(new models.User, wg ...*sync.WaitGroup) (err error) {
 	if len(wg) > 0 {
 		defer wg[0].Done()
 	}
 
-	if !dao.CheckInit() {
-		return errors.New("es client not init")
-	}
-
-	ctx := context.Background()
-	new.ID = dao.GetCount()
+	new.ID = dao.safe.GetCount()
 	doc, err := json.Marshal(new)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(doc))
-	put1, err := dao.cli.Index().Index(dao.cluster).Id(new.ID).BodyJson(string(doc)).Do(ctx)
+	put1, err := dao.cli.Index().Index(dao.cluster).Id(new.ID).BodyJson(string(doc)).Do(dao.ctx)
 	if err != nil {
 		fmt.Println("err", err)
 		return
 	}
 
-	_, err = dao.cli.Flush().Index(dao.cluster).Do(ctx)
+	_, err = dao.cli.Flush().Index(dao.cluster).Do(dao.ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -133,7 +107,23 @@ func (dao *Dao) CreateUser(new model.User, wg ...*sync.WaitGroup) (err error) {
 	return
 }
 
-func (dao *Dao) UpdateUser(updated model.User) (err error) {
+func (dao *UserImplDao) BatchCreate(new []models.User) (err error) {
+	if !dao.CheckInit() {
+		return errors.New("es client not init")
+	}
+	var wg sync.WaitGroup
+
+	for _, item := range new {
+		wg.Add(1)
+		go dao.create(item, &wg)
+	}
+	wg.Wait()
+
+	logger.Print("batch index done", INFO)
+	return
+}
+
+func (dao *UserImplDao) Update(updated models.User) (err error) {
 	if !dao.CheckInit() {
 		return errors.New("es client not init")
 	}
@@ -156,7 +146,20 @@ func (dao *Dao) UpdateUser(updated model.User) (err error) {
 	return
 }
 
-func (dao *Dao) DeleteUser(id string) (err error) {
+func (dao *UserImplDao) UpdateUserName(id, newName string) (err error) {
+	if !dao.CheckInit() {
+		return errors.New("es client not init")
+	}
+	update, err := dao.cli.Update().Index(dao.cluster).Id(id).Doc(map[string]interface{}{"name": newName}).Do(dao.ctx)
+	if err != nil {
+		logger.Print(fmt.Sprintf("es error %s", err), ERROR)
+		return
+	}
+	logger.Print(fmt.Sprintf("New version of user %q is now %d", update.Id, update.Version), INFO)
+	return
+}
+
+func (dao *UserImplDao) Delete(id string) (err error) {
 	if !dao.CheckInit() {
 		return errors.New("es client not init")
 	}

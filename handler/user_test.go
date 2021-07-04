@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetUserInvalid(t *testing.T) {
-	userId, user := 0, model.User{}
+	userId, user := 0, models.User{}
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/user/%d", userId), nil)
 	resp := httptest.NewRecorder()
 
@@ -24,12 +24,12 @@ func TestGetUserInvalid(t *testing.T) {
 
 	err := json.NewDecoder(resp.Body).Decode(&user)
 	assert.NotNil(t, err, "json decoder err")
-	require.EqualValues(t, model.User{}, user, "response is nil")
+	require.EqualValues(t, models.User{}, user, "response is nil")
 	assert.EqualValues(t, http.StatusBadRequest, resp.Code, "response code is not ok")
 }
 
 func TestGetUserValid(t *testing.T) {
-	userId, user := 1, model.User{}
+	userId, user := 1, models.User{}
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/user/%d", userId), nil)
 	resp := httptest.NewRecorder()
 
@@ -39,6 +39,6 @@ func TestGetUserValid(t *testing.T) {
 
 	err := json.NewDecoder(resp.Body).Decode(&user)
 	assert.Nil(t, err, "json decoder err")
-	require.NotEqualValues(t, model.User{}, user, "response is nil")
+	require.NotEqualValues(t, models.User{}, user, "response is nil")
 	assert.EqualValues(t, http.StatusOK, resp.Code, "response code is not ok")
 }

@@ -1,4 +1,4 @@
-package dao
+package elasticsearch
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/metildachee/userie/model"
+	"github.com/metildachee/userie/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ func TestInit(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	u := model.User{
+	u := models.User{
 		Name:        "metchee",
 		DOB:         int32(time.Now().Unix()),
 		Address:     "Kent Ridge",
@@ -28,7 +28,7 @@ func TestCreateUser(t *testing.T) {
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")
 
-	err = dao.CreateUser(u)
+	err = dao.Create(u)
 	assert.Nil(t, err, "should not have error when indexing doc")
 }
 
@@ -37,7 +37,7 @@ func TestCreateMultipleUsers(t *testing.T) {
 		numOfUsersToCreate = 5
 		wg                 sync.WaitGroup
 	)
-	u := model.User{
+	u := models.User{
 		Name:        "metchee",
 		DOB:         int32(time.Now().Unix()),
 		Address:     "Kent Ridge",
@@ -50,21 +50,46 @@ func TestCreateMultipleUsers(t *testing.T) {
 
 	for i := 0; i < numOfUsersToCreate; i++ {
 		wg.Add(1)
-		go dao.CreateUser(u, &wg)
+		go dao.Create(u, &wg)
 	}
-	err = dao.CreateUser(u)
+	err = dao.Create(u)
 	assert.Nil(t, err, "should not have error when create users")
 	wg.Wait()
 
-	users, err := dao.GetUsers(10)
+	users, err := dao.GetAll(10)
 	assert.Nil(t, err, "should not have error when get users")
 	assert.True(t, len(users) >= numOfUsersToCreate+1, "we created 6 items, should have equal or more")
+}
+
+func TestBatchCreateUser(t *testing.T) {
+	var (
+		numOfUsers = 10
+	)
+	users := make([]models.User, 0)
+	for i := 0; i < numOfUsers; i++ {
+		u := models.User{
+			Name:        fmt.Sprintf("metchee %d", i),
+			DOB:         int32(time.Now().Unix()),
+			Address:     fmt.Sprintf("kent ridge %d", i),
+			Description: fmt.Sprintf("default user info %d", i),
+			Ctime:       int32(time.Now().Unix()),
+		}
+		users = append(users, u)
+	}
+	dao, err := NewDao()
+	assert.Nil(t, err, "should not have error when init")
+	err = dao.BatchCreate(users)
+	assert.Nil(t, err, "should not have error when create users")
+
+	res, err := dao.GetAll(numOfUsers)
+	assert.Nil(t, err, "should not have error when get users")
+	assert.GreaterOrEqual(t, len(res), numOfUsers, "we created many items, should have equal or more")
 }
 
 func TestGetUser(t *testing.T) {
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")
-	user, err := dao.GetUser("1")
+	user, err := dao.GetById("1")
 	assert.Nil(t, err, "should not have err when getting user")
 	assert.NotNil(t, user, "user should not be nil")
 	fmt.Println("user", user)
@@ -75,7 +100,7 @@ func TestGetUsers(t *testing.T) {
 		minimumNumOfDocs = 5
 	)
 	dao, err := NewDao()
-	users, err := dao.GetUsers(10)
+	users, err := dao.GetAll(10)
 	assert.Nil(t, err, "should not have error when get users")
 	assert.True(t, len(users) > minimumNumOfDocs)
 }
@@ -87,16 +112,14 @@ func TestUpdateUser(t *testing.T) {
 	)
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")
-	user, err := dao.GetUser(userId)
+	user, err := dao.GetById(userId)
 	assert.Nil(t, err, "should not have err when getting user")
 	assert.NotNil(t, user, "user should not be nil")
 
-	time.Sleep(5 * time.Second)
-
 	user.Description = updatedDesc
-	err = dao.UpdateUser(user)
+	err = dao.Update(user)
 	assert.Nil(t, err, "should not have err when update user")
-	updatedUser, err := dao.GetUser(user.ID)
+	updatedUser, err := dao.GetById(user.ID)
 	assert.Nil(t, err, "should not have err when getting user")
 	assert.NotEqualValues(t, user.Description, updatedUser.Description, "should not have the same value")
 }
@@ -107,12 +130,29 @@ func TestDeleteUser(t *testing.T) {
 	)
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")
-	user, err := dao.GetUser(userId)
+	user, err := dao.GetById(userId)
 	assert.Nil(t, err, "should not have err when getting user")
 	assert.NotNil(t, user, "user should not be nil")
 
-	err = dao.DeleteUser(userId)
+	err = dao.Delete(userId)
 	assert.Nil(t, err, "should not have err when delete user")
-	_, err = dao.GetUser(userId)
+	_, err = dao.GetById(userId)
 	assert.NotNil(t, err)
+}
+
+func TestUpdateUserName(t *testing.T) {
+	var (
+		userId      = "2"
+		updatedName = "meow meow"
+	)
+	dao, err := NewDao()
+	assert.Nil(t, err, "should not have error when init")
+	user, err := dao.GetById(userId)
+	assert.Nil(t, err, "should not have err when getting user")
+	assert.NotNil(t, user, "user should not be nil")
+	err = dao.UpdateUserName(userId, updatedName)
+	assert.Nil(t, err, "should not have err when update user")
+	updatedUser, err := dao.GetById(user.ID)
+	assert.Nil(t, err, "should not have err when getting user")
+	assert.EqualValues(t, updatedName, updatedUser.Name, "should not have the same value")
 }
