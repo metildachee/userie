@@ -76,6 +76,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
+	w = writeJsonHeader(w)
 	dao, err := elasticsearch.NewDao()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -94,8 +95,15 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if err := dao.Create(newUser); err != nil {
+	id := ""
+	if id, err = dao.Create(newUser); err != nil {
 		logger.Print(fmt.Sprintf("create users from dao err=%s", err), ERROR)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write([]byte(id))
+	if err != nil {
+		logger.Print(fmt.Sprintf("writing to response failed err=%s", err), ERROR)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

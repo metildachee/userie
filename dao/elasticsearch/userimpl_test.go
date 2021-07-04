@@ -28,8 +28,9 @@ func TestCreateUser(t *testing.T) {
 	dao, err := NewDao()
 	assert.Nil(t, err, "should not have error when init")
 
-	err = dao.Create(u)
+	id, err := dao.Create(u)
 	assert.Nil(t, err, "should not have error when indexing doc")
+	assert.NotEqualValues(t, "0", id, "id should not be 0")
 }
 
 func TestCreateMultipleUsers(t *testing.T) {
@@ -52,8 +53,9 @@ func TestCreateMultipleUsers(t *testing.T) {
 		wg.Add(1)
 		go dao.Create(u, &wg)
 	}
-	err = dao.Create(u)
-	assert.Nil(t, err, "should not have error when create users")
+	id, err := dao.Create(u)
+	require.Nil(t, err, "should not have error when create users")
+	assert.NotEqualValues(t, "0", id, "id should not be 0")
 	wg.Wait()
 
 	users, err := dao.GetAll(10)

@@ -24,8 +24,8 @@ func (u *User) Validate() (err error) {
 	if u.Name == "" {
 		return errors.New("invalid username")
 	}
-	if u.DOB >= int32(time.Now().UnixNano()) {
-		return errors.New("invalid dob")
+	if u.DOB >= int32(time.Now().Unix()) {
+		return errors.New("invalid dob, expecting greater than now")
 	}
 	if u.Address == "" {
 		return errors.New("invalid address")
@@ -33,7 +33,7 @@ func (u *User) Validate() (err error) {
 	if u.Description == "" {
 		return errors.New("invalid description")
 	}
-	if u.Ctime > int32(time.Now().UnixNano()) {
+	if u.Ctime > int32(time.Now().Unix()) {
 		return errors.New("invalid ctime")
 	}
 	return nil
