@@ -1,5 +1,5 @@
 # About
-- Documentation
+![image](https://user-images.githubusercontent.com/65015150/124505374-eeed7000-ddfb-11eb-81ab-83f42609f66b.png)
 
 # Set up env
 ## Install and run Elastic search 
