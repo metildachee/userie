@@ -23,7 +23,7 @@ type UserImplDao struct {
 	safe    SafeCounter
 }
 
-func (dao *UserImplDao) GetAll(ctx context.Context, limit int) (users []models.User, err error) {
+func (dao *UserImplDao) GetAll(ctx context.Context, limit, offset int) (users []models.User, err error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "es get all")
 	defer span.Finish()
 
@@ -42,7 +42,7 @@ func (dao *UserImplDao) GetAll(ctx context.Context, limit int) (users []models.U
 	searchResult, err := dao.cli.Search().
 		Index(dao.cluster).
 		Query(query).
-		From(0).
+		From(offset).
 		Size(limit).
 		Do(ctx)
 	if err != nil {

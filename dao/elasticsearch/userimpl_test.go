@@ -67,7 +67,7 @@ func TestCreateMultipleUsers(t *testing.T) {
 	assert.NotEqualValues(t, "0", id, "id should not be 0")
 	wg.Wait()
 
-	users, err := dao.GetAll(ctx, 10)
+	users, err := dao.GetAll(ctx, 10, 0)
 	assert.Nil(t, err, "should not have error when get users")
 	assert.True(t, len(users) >= numOfUsersToCreate+1, "we created 6 items, should have equal or more")
 }
@@ -94,7 +94,7 @@ func TestBatchCreateUser(t *testing.T) {
 	err = dao.BatchCreate(ctx, users)
 	assert.Nil(t, err, "should not have error when create users")
 
-	res, err := dao.GetAll(ctx, numOfUsers)
+	res, err := dao.GetAll(ctx, numOfUsers, 0)
 	assert.Nil(t, err, "should not have error when get users")
 	assert.GreaterOrEqual(t, len(res), numOfUsers, "we created many items, should have equal or more")
 }
@@ -117,7 +117,7 @@ func TestGetUsers(t *testing.T) {
 	)
 	ctx := context.Background()
 	dao, err := NewDao(ctx)
-	users, err := dao.GetAll(ctx, 10)
+	users, err := dao.GetAll(ctx, 10, 0)
 	assert.Nil(t, err, "should not have error when get users")
 	assert.True(t, len(users) > minimumNumOfDocs)
 }
