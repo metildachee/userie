@@ -24,6 +24,7 @@ func main() {
 	verbose := flag.Bool("verbose", true, "some boolean")
 	flag.Parse()
 
+	// Fetch and set config
 	if *configFilePath == "" || *logFilePath == "" {
 		log.Fatal("invalid file path")
 	}
@@ -42,32 +43,23 @@ func main() {
 	defer logger.Init("info logger", *verbose, *verbose, lf).Close()
 
 	// Init tracer
-	tracer, closer := utilities.InitJaeger(env.GetServiceEnvName())
+	tracer, closer := utilities.InitJaeger(env.GetServiceName())
 	defer closer.Close()
 	opentracing.SetGlobalTracer(tracer)
-	ctx := opentracing.ContextWithSpan(context.Background(), tracer.StartSpan("service started"))
+	opentracing.ContextWithSpan(context.Background(), tracer.StartSpan("service started"))
 
 	// Init http
 	r := mux.NewRouter()
 	prefix := r.PathPrefix("/api").Subrouter()
 
-	us := prefix.PathPrefix("/users").Subrouter()
-	us.HandleFunc("/limit={limit}", func(w http.ResponseWriter, r *http.Request) {
-		api.GetAll(w, r, ctx)
-	}).Methods(http.MethodGet)
-	us.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		api.CreateUser(w, r, ctx)
-	}).Methods(http.MethodPost)
-	us.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		api.UpdateUser(w, r, ctx)
-	}).Methods(http.MethodPut)
-	us.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		api.DeleteUser(w, r, ctx)
-	}).Methods(http.MethodDelete)
+	u := prefix.PathPrefix("/user").Subrouter()
+	u.HandleFunc("/{id}", api.GetUser).Methods(http.MethodGet)
+	u.HandleFunc("", api.UpdateUser).Methods(http.MethodPut)
+	u.HandleFunc("/{id}", api.DeleteUser).Methods(http.MethodDelete)
+	u.HandleFunc("", api.CreateUser).Methods(http.MethodPost)
 
-	u := prefix.Path("/user").Subrouter()
-	u.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		api.GetUser(w, r, ctx)
-	}).Methods(http.MethodGet)
+	us := prefix.PathPrefix("/users").Subrouter()
+	us.HandleFunc("/limit={limit}&offset={offset}", api.GetAll).Methods(http.MethodGet)
+
 	log.Fatal(http.ListenAndServe(env.GetServerEndpoint(), r))
 }
