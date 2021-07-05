@@ -1,5 +1,5 @@
 # Architecture
-![image](https://user-images.githubusercontent.com/65015150/124505374-eeed7000-ddfb-11eb-81ab-83f42609f66b.png)
+![image](https://user-images.githubusercontent.com/65015150/124505532-4db2e980-ddfc-11eb-8263-77ddd775ca69.png)
 
 # Set up env
 ## Install and run Elastic search 
